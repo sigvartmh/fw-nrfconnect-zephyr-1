@@ -87,7 +87,15 @@ static inline bool is_aligned_32(u32_t data)
 
 static inline bool is_regular_addr_valid(off_t addr, size_t len)
 {
-	if (addr >= NRF_FICR->CODEPAGESIZE * NRF_FICR->CODESIZE ||
+	/* TODO: Verify that this is correct */
+	if ((addr + len) > (NRF_FICR->CODEPAGESIZE * NRF_FICR->CODESIZE) ||
+	    addr < 0) {
+		return false;
+	}
+
+	return true;
+	/*
+	if (addr >= ((NRF_FICR->CODEPAGESIZE) * NRF_FICR->CODESIZE) ||
 	    addr < 0 ||
 	    len > NRF_FICR->CODEPAGESIZE * NRF_FICR->CODESIZE ||
 	    addr + len > NRF_FICR->CODEPAGESIZE * NRF_FICR->CODESIZE) {
@@ -95,6 +103,7 @@ static inline bool is_regular_addr_valid(off_t addr, size_t len)
 	}
 
 	return true;
+	*/
 }
 
 
@@ -125,6 +134,31 @@ static void nvmc_wait_ready(void)
 	while (NRF_NVMC->READY == NVMC_READY_READY_Busy) {
 		;
 	}
+}
+
+enum nvmc_config {
+#if (defined(CONFIG_SOC_NRF9160) && defined(CONFIG_ARM_NONSECURE_FIRMWARE))
+	REN = NVMC_CONFIGNS_WEN_Ren << NVMC_CONFIGNS_WEN_Pos,
+	WEN = NVMC_CONFIGNS_WEN_Wen << NVMC_CONFIGNS_WEN_Pos,
+	EEN = NVMC_CONFIGNS_WEN_Een << NVMC_CONFIGNS_WEN_Pos,
+#else
+	REN = NVMC_CONFIG_WEN_Ren << NVMC_CONFIG_WEN_Pos,
+	WEN = NVMC_CONFIG_WEN_Wen << NVMC_CONFIG_WEN_Pos,
+	EEN = NVMC_CONFIG_WEN_Een << NVMC_CONFIG_WEN_Pos,
+#endif
+};
+
+static u32_t nvmc_config_set(enum nvmc_config mode)
+{
+#if (defined(CONFIG_SOC_NRF9160) && defined(CONFIG_ARM_NONSECURE_FIRMWARE))
+	const u32_t cfg = NRF_NVMC->CONFIGNS;
+	NRF_NVMC->CONFIGNS = mode;
+#else
+	const u32_t cfg = NRF_NVMC->CONFIG;
+	NRF_NVMC->CONFIG = mode;
+#endif
+	nvmc_wait_ready();
+	return cfg;
 }
 
 static int flash_nrf_read(struct device *dev, off_t addr,
@@ -461,11 +495,15 @@ static int erase_op(void *context)
 #endif
 
 	do {
+#ifdef CONFIG_SOC_NRF9160
+		*(u32_t *)e_ctx->flash_addr = 0xFFFFFFFF;
+#else
 		NRF_NVMC->ERASEPAGE = e_ctx->flash_addr;
 		nvmc_wait_ready();
 
 		e_ctx->len -= pg_size;
 		e_ctx->flash_addr += pg_size;
+#endif
 
 #if defined(CONFIG_SOC_FLASH_NRF_RADIO_SYNC)
 		i++;
