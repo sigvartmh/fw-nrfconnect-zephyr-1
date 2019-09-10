@@ -30,13 +30,19 @@
 
 #define BOOT_IMG_VER_STRLEN_MAX 25  /* 255.255.65535.4294967295\0 */
 
+/* Header: */
+#define BOOT_MAGIC               0x96f3b83d
+#define BOOT_MAGIC_V1            0x96f3b83c
+#define BOOT_MAGIC_NONE          0xffffffff
+#define BOOT_HEADER_SZ           32
+
 /* Trailer: */
 #define BOOT_MAX_ALIGN		8
 #define BOOT_MAGIC_SZ		16
 
 #define BOOT_TRAILER_IMG_STATUS_OFFS(bank_area) ((bank_area)->fa_size -\
-						  BOOT_MAGIC_SZ -\
-						  BOOT_MAX_ALIGN * 2)
+		BOOT_MAGIC_SZ -\
+		BOOT_MAX_ALIGN * 2)
 /**
  * @brief MCUboot image header representation for image version
  *
@@ -68,6 +74,31 @@ struct mcuboot_img_header_v1 {
 };
 
 /**
+ * @brief Model for the MCUboot image header as of version 1
+ *
+ * This represents the data present in the image header, in version 1
+ * of the header format.
+ *
+ * Some information present in the header but not currently relevant
+ * to applications is omitted.
+ */
+/** Image header.  All fields are in little endian byte order. */
+struct mcuboot_img_header_v2{
+	u32_t magic;
+	u32_t load_addr;
+	/** Size of image header (bytes). **/
+	u16_t hdr_size;
+	/** Size of protected TLV area (bytes). **/
+	u16_t protect_tlv_size;
+	/* Does not include header. */
+	u32_t img_size;
+	/* IMAGE_F_[...]. */
+	u32_t flags;              
+	struct mcuboot_img_sem_ver sem_ver;
+	u32_t _pad1;
+};
+
+/**
  * @brief Model for the MCUBoot image header
  *
  * This contains the decoded image header, along with the major
@@ -93,6 +124,8 @@ struct mcuboot_img_header {
 	union {
 		/** Header information for MCUboot version 1. */
 		struct mcuboot_img_header_v1 v1;
+		/** Header information for MCUboot version 1. */
+		struct mcuboot_img_header_v2 v2;
 	} h;
 };
 
