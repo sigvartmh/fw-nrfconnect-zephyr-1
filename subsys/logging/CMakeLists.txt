@@ -44,6 +44,11 @@ if(NOT CONFIG_LOG_MINIMAL)
     log_backend_swo.c
   )
 
+zephyr_sources_ifdef(
+  CONFIG_LOG_BACKEND_MQTT
+    log_backend_mqtt.c
+  )
+
   zephyr_sources_ifdef(
     CONFIG_LOG_MIPI_SYST_ENABLE
     log_output_syst.c

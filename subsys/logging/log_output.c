@@ -51,6 +51,8 @@ extern void z_vprintk(out_func_t out, void *log_output,
 		     const char *fmt, va_list ap);
 extern void log_output_msg_syst_process(const struct log_output *log_output,
 				struct log_msg *msg, u32_t flag);
+extern void log_output_msg_json_process(const struct log_output *log_output,
+				struct log_msg *msg, u32_t flag);
 extern void log_output_string_syst_process(const struct log_output *log_output,
 				struct log_msg_ids src_level,
 				const char *fmt, va_list ap, u32_t flag);
@@ -527,6 +529,12 @@ void log_output_msg_process(const struct log_output *log_output,
 		log_output_msg_syst_process(log_output, msg, flags);
 		return;
 	}
+	/*
+	if (IS_ENABLED(CONFIG_LOG_JSON_ENABLE) && flags & LOG_OUTPUT_FLAG_FORMAT_JSON)
+	{
+		log_output_msg_json_process(log_output, msg, flags);
+	}
+	*/
 
 	prefix_offset = raw_string ?
 			0 : prefix_print(log_output, flags, std_msg, timestamp,

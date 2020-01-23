@@ -444,6 +444,24 @@ config LOG_BACKEND_XTENSA_OUTPUT_BUFFER_SIZE
 	  Buffer is used by log_output module for preparing output data (e.g.
 	  string formatting).
 
+config LOG_BACKEND_MQTT
+	bool "Enable MQTT publish backend"
+	depends on NETWORKING
+	help
+	  Send messages to MQTT server.
+
+config LOG_BACKEND_MQTT_SYST_ENABLE
+	bool "Enable mqtt syst backend"
+	depends on LOG_MIPI_SYST_ENABLE
+	help
+	  When enabled backend is using mqtt to output syst format logs.
+
+config LOG_BACKEND_MQTT_MAX_BUF_SIZE
+	int "MQTT send buffer size"
+	default 1024
+	help
+	  Size of buffer for sending mqtt message
+
 config LOG_BACKEND_NET
 	bool "Enable networking backend"
 	depends on NETWORKING
