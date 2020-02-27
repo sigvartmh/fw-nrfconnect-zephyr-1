@@ -313,10 +313,10 @@ static int boot_write_trailer_byte(const struct flash_area *fa, u32_t off,
 	align = flash_area_align(fa);
 	assert(align <= BOOT_MAX_ALIGN);
 	erased_val = flash_area_erased_val(fa);
+	/* TODO: not the best solution should this be handled in the qspi nor driver instead */
 	memset(buf, erased_val, BOOT_MAX_ALIGN);
 	buf[0] = val;
-
-	rc = flash_area_write(fa, off, buf, align);
+	rc = flash_area_write(fa, off, buf, BOOT_MAX_ALIGN);
 	if (rc != 0) {
 		return -EIO;
 	}
@@ -388,6 +388,11 @@ static int boot_magic_write(u8_t bank_id)
 	const struct flash_area *fa;
 	u32_t offs;
 	int rc;
+	/* TODO: Should the QSPI driver recognize that the value is in flash
+	 * and copy it to ram instead of hanging ?
+	 */
+	u8_t magic[BOOT_MAGIC_SZ];
+	memcpy(magic, boot_img_magic, BOOT_MAGIC_SZ);
 
 	rc = flash_area_open(bank_id, &fa);
 	if (rc) {
@@ -395,8 +400,7 @@ static int boot_magic_write(u8_t bank_id)
 	}
 
 	offs = MAGIC_OFFS(fa);
-
-	rc = flash_area_write(fa, offs, boot_img_magic, BOOT_MAGIC_SZ);
+	rc = flash_area_write(fa, offs, magic, BOOT_MAGIC_SZ);
 	flash_area_close(fa);
 
 	return rc;
