@@ -60,4 +60,15 @@ config SEGGER_RTT_MODE
 config SEGGER_RTT_MEMCPY_USE_BYTELOOP
 	bool "Use a simple byte-loop instead of standard memcpy"
 
+config SEGGER_RTT_USE_MEMORY_SECTION
+	bool "Use a memory section instead of random placement"
+
+if SEGGER_RTT_USE_MEMORY_SECTION
+
+config SEGGER_RTT_USE_MEMORY_SECTION_NAME
+	string
+	default "segger_rtt"
+
+endif
+
 endif
